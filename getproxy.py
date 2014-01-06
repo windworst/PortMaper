@@ -14,6 +14,7 @@ def remove_brackets(line):
 		else:
 			if c == '>':
 				flag = False
+				host += ' '
 	return host
 
 def gethostfromurl(url):
