@@ -25,11 +25,11 @@ class listener:
 				break
 			except socket.error, arg:
 				errno,err_msg = arg
-				if errno != 10035:
+				if errno != 10035 and errno!=115:
 					raise socket.error(arg)
 		ac.setblocking(0)
 		self.on_accept(addr)
-		return ac
+		return (ac,addr)
 
 #get connect socket
 
@@ -56,7 +56,8 @@ class connector:
 			s.connect(self.ip_port)
 		except socket.error, arg:
 			errno,err_msg = arg
-			if errno != 10035:
+			if errno == 10061:
+				self.on_connect_failed(self.ip_port)
 				raise socket.error(arg)
 		timeout = self.timeout
 		while timeout>0:
@@ -68,52 +69,53 @@ class connector:
 			if len(es)>0:
 				self.on_connect_failed(self.ip_port)
 				raise socket.error(10061,'')
-		return s
+		return (s,self.ip_port)
 
 #transmit data between two sockets
 
 class socktransfer:
 	buf_len = 8192
-	def on_data_tran(self,sock1,sock2,data):
-		ip1,port1 = sock1.getpeername()
-		ip2,port2 = sock2.getpeername()
+	def on_data_tran(self,addr1,addr2,data):
+		ip1,port1 = addr1
+		ip2,port2 = addr2
 		sys.stdout.write('[+] Data: %s:%d >>> %s:%d, %d Bytes\n' %(ip1,port1,ip2,port2,len(data)) )
 
-	def on_tran_close(self,sock1,sock2):
-		ip1,port1 = sock1.getpeername()
-		ip2,port2 = sock2.getpeername()
+	def on_tran_close(self,addr1,addr2):
+		ip1,port1 = addr1
+		ip2,port2 = addr2
 		sys.stdout.write('[-] Quit: %s:%d <-> %s:%d\n' %(ip1,port1,ip2,port2))
 
 	def __call__(self,sock1,sock2):# return transfer result
 		data1 = 0
 		data2 = 0
-
+		s1,addr1 = sock1
+		s2,addr2 = sock2
 		# recv
 		try:
-			data1 = sock1.recv(self.buf_len)
+			data1 = s1.recv(self.buf_len)
 		except socket.error, arg:
 			errno,err_msg = arg
-			if errno != 10035: 
-				self.on_tran_close(sock1,sock2)
+			if errno == 10054:
+				self.on_tran_close(addr1,addr2)
 				return False
 
 		try:
-			data2 = sock2.recv(self.buf_len)
+			data2 = s2.recv(self.buf_len)
 		except socket.error, arg:
 			errno,err_msg = arg
-			if errno != 10035:
-				self.on_tran_close(sock1,sock2)
+			if errno == 10054:
+				self.on_tran_close(addr1,addr2)
 				return False
 		# send
 		try:
 			if data1:
-				self.on_data_tran(sock1,sock2,data1)
-				sock2.send(data1)
+				self.on_data_tran(addr1,addr2,data1)
+				s2.send(data1)
 			if data2:
-				self.on_data_tran(sock2,sock1,data2)
-				sock1.send(data2)
+				self.on_data_tran(addr1,addr2,data2)
+				s1.send(data2)
 		except socket.error:
-			self.on_tran_close(sock1,sock2)
+			self.on_tran_close(addr1,addr2)
 			return False
 		return True
 
@@ -192,8 +194,10 @@ class portmaper(threading.Thread):
 			if self.socktransfer(sock1,sock2):
 				index += 1
 			else:
-				sock1.close()
-				sock2.close()
+				s1,addr1 = sock1
+				s2,addr2 = sock2
+				s1.close()
+				s2.close()
 				del self.socks_list[index]
 
 		#clean
@@ -202,8 +206,10 @@ class portmaper(threading.Thread):
 		except:
 			pass
 		for sock1,sock2 in self.socks_list:
-			sock1.close()
-			sock2.close()
+			s1,addr1 = sock1
+			s2,addr2 = sock2
+			s1.close()
+			s2.close()
 		self.socks_list = []
 
 # # # # # # # # # # # # # # # # # # # #
