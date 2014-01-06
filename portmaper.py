@@ -239,31 +239,8 @@ def start_portmap(get1,get2):
 		sys.stdout.write('[-] Accept Ctrl+C, Quiting...\n')
 		p.join()
 
-def getipaddr(ifname):
-	# in linux
-	import fcntl
-	import struct
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	return socket.inet_ntoa(fcntl.ioctl(
-        	s.fileno(),
-	        0x8915,  # SIOCGIFADDR
-        	struct.pack('256s', ifname[:15])
-			)[20:24])
-
-def getlocalip():
-	ip_str = socket.gethostbyname(socket.gethostname())
-	if '127' in ip_str >=0 :
-		try:
-			ip_str = getipaddr('eth0')
-		except:
-			try:
-				ip_str = getipaddr('wlan0')
-			except:
-				pass
-	return ip_str
-
 def listen(port1,port2):
-	localip = getlocalip()
+	localip = '0.0.0.0'
 	l1 = listen_on_port((localip,port1))
 	if not l1:
 		return
@@ -275,7 +252,7 @@ def listen(port1,port2):
 	l2.s.close()
 
 def tran(port1,ip2,port2):
-	localip = getlocalip()
+	localip = '0.0.0.0'
 	l = listen_on_port((localip,port1))
 	if not l:
 		return
