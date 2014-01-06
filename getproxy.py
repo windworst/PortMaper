@@ -2,10 +2,29 @@ import urllib
 import string
 import re
 
+def remove_brackets(line):
+	host = ''
+	flag = False
+	for c in line:
+		if not flag:
+			if c == '<':
+				flag = True
+			else:
+				host += c
+		else:
+			if c == '>':
+				flag = False
+	return host
+
 def gethostfromurl(url):
-	req=urllib.urlopen(url)
-	s=req.read()
-	list = s.split('\n')
+	try:
+		req=urllib.urlopen(url)
+		s=req.read()
+		list = s.split('\n')
+	except:
+		f = open(url,'r')
+		list = f.readlines()
+
 	hostlist = []
 
 	ip_str = 0
@@ -14,18 +33,8 @@ def gethostfromurl(url):
 	for line in list:
 		mip = 0
 		mport = 0
-
 		flag = False
-		host = ''
-		for c in line:
-			if not flag:
-				if c == '<':
-					flag = True
-				else:
-					host += c
-			else:
-				if c == '>':
-					flag = False
+		host = remove_brackets(line)
 
 		if not ip_str:
 			mip = reip.search(host)
@@ -65,6 +74,8 @@ def getproxy():
 		return
 	list = []
 	for url in urls:
+		if url[0] == '#':
+			continue
 		if url[-1] == '\n':
 			url = url[0:-1]
 		print 'read:',url,
