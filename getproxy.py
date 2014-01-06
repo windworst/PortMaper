@@ -37,17 +37,23 @@ def savelisttofile(list,filepath):
 		f.write('%s:%d\n'%(ip,port))
 	f.close()
 
-s_urls = [
-		'http://pachong.org',
-		'http://www.proxy360.cn/'
-		]
-
 s_savefile = 'proxylist.txt'
+s_urlfile = 'urllist.txt'
 
 def getproxy():
-	global s_urls,s_savefile
+	global s_savefile,s_urlfile
+	urls = 0
+	try:
+		f = open(s_urlfile,'r')
+		urls = f.readlines()
+		print 'Reading',s_urlfile,"Success"
+	except:
+		print 'Error: Reading',s_urlfile
+		return
 	list = []
-	for url in s_urls:
+	for url in urls:
+		if url[-1] == '\n':
+			url = url[0:-1]
 		print 'read:',url,
 		hostlist = gethostfromurl(url)
 		print len(hostlist),'hosts'
