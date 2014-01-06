@@ -11,9 +11,22 @@ def gethostfromurl(url):
 	ip_str = 0
 	reip = re.compile('\d+\.\d+\.\d+\.\d+')
 	report = re.compile('\d+')
-	for host in list:
+	for line in list:
 		mip = 0
 		mport = 0
+
+		flag = False
+		host = ''
+		for c in line:
+			if not flag:
+				if c == '<':
+					flag = True
+				else:
+					host += c
+			else:
+				if c == '>':
+					flag = False
+
 		if not ip_str:
 			mip = reip.search(host)
 			if mip:
@@ -38,7 +51,7 @@ def savelisttofile(list,filepath):
 	f.close()
 
 s_savefile = 'proxylist.txt'
-s_urlfile = 'urllist.txt'
+s_urlfile = 'proxyurl.txt'
 
 def getproxy():
 	global s_savefile,s_urlfile
