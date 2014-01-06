@@ -17,6 +17,7 @@ class listener:
 
 	def on_accept(self,addr):
 		sys.stdout.write('[+] Listen: %s:%d Connect in\n'%addr)
+		sys.stdout.flush()
 
 	def __call__(self):
 		while True:
@@ -41,12 +42,15 @@ class connector:
 	
 	def on_connect(self,addr):
 		sys.stdout.write('[+] Connect: Linking %s:%d ...\n'%addr)
+		sys.stdout.flush()
 
 	def on_connect_success(self,addr):
 		sys.stdout.write('[+] Connect: %s:%d Link Success\n'%addr)
+		sys.stdout.flush()
 
 	def on_connect_failed(self,addr):
 		sys.stdout.write('[-] Connect  %s:%d Link Failed\n'%addr)
+		sys.stdout.flush()
 
 	def __call__(self):
 		s = socket.socket()
@@ -79,11 +83,13 @@ class socktransfer:
 		ip1,port1 = addr1
 		ip2,port2 = addr2
 		sys.stdout.write('[+] Data: %s:%d >>> %s:%d, %d Bytes\n' %(ip1,port1,ip2,port2,len(data)) )
+		sys.stdout.flush()
 
 	def on_tran_close(self,addr1,addr2):
 		ip1,port1 = addr1
 		ip2,port2 = addr2
 		sys.stdout.write('[-] Quit: %s:%d <-> %s:%d\n' %(ip1,port1,ip2,port2))
+		sys.stdout.flush()
 
 	def __call__(self,sock1,sock2):# return transfer result
 		data1 = 0
@@ -95,7 +101,7 @@ class socktransfer:
 			data1 = s1.recv(self.buf_len)
 		except socket.error, arg:
 			errno,err_msg = arg
-			if errno == 10054:
+			if errno == 10053 or errno == 10054:
 				self.on_tran_close(addr1,addr2)
 				return False
 
@@ -103,7 +109,7 @@ class socktransfer:
 			data2 = s2.recv(self.buf_len)
 		except socket.error, arg:
 			errno,err_msg = arg
-			if errno == 10054:
+			if errno == 10053 or errno == 10054:
 				self.on_tran_close(addr1,addr2)
 				return False
 		# send
