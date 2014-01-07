@@ -1,4 +1,4 @@
-import urllib2
+import urllib
 import string
 import re
 
@@ -18,10 +18,8 @@ def remove_brackets(line):
 	return host
 
 def gethostfromurl(url):
-	opener = urllib2.build_opener()
-	opener.addheaders = [('User-agent', 'Mozilla/5.0')];
 	try:
-		req=urllib2.urlopen(url)
+		req=urllib.urlopen(url)
 		s=req.read()
 		list = s.split('\n')
 	except:
