@@ -1,6 +1,7 @@
 import urllib
 import string
 import re
+import sys
 
 def remove_brackets(line):
 	host = ''
@@ -17,15 +18,8 @@ def remove_brackets(line):
 				host += ' '
 	return host
 
-def gethostfromurl(url):
-	try:
-		req=urllib.urlopen(url)
-		s=req.read()
-		list = s.split('\n')
-	except:
-		f = open(url,'r')
-		list = f.readlines()
-
+def gethostfrompage(page):
+	list = page.split('\n')
 	hostlist = []
 
 	ip_str = 0
@@ -50,6 +44,17 @@ def gethostfromurl(url):
 			hostlist.append(addr)
 			ip_str = 0
 	return hostlist
+
+def gethostfromurl(url):
+	data = 0
+	try:
+		req=urllib.urlopen(url)
+		data=req.read()
+	except:
+		f = open(url,'r')
+		data = f.read()
+
+	return gethostfrompage(data)
 	
 def savelisttofile(list,filepath):
 	try:
@@ -79,11 +84,11 @@ def getproxy():
 			continue
 		if url[-1] == '\n':
 			url = url[0:-1]
-		print 'read:',url,
+		sys.stdout.write( '[+] read:%s\n'%url )
 		hostlist = gethostfromurl(url)
-		print len(hostlist),'hosts'
+		sys.stdout.write( '[+] get %d hosts\n'%len(hostlist))
 		list.extend(hostlist)
-	print 'total:',len(list),'hosts'
+	print '[+] total:',len(list),'hosts'
 	savelisttofile(list,s_savefile)
 
 if __name__=='__main__':
